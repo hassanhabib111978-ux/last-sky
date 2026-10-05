@@ -87,6 +87,7 @@ func _build_city_block() -> void:
     _make_cover(city, Vector3(10, 0.7, -6), Vector3(3, 1.4, 3))
     _make_cover(city, Vector3(-10, 0.7, -2), Vector3(3, 1.4, 4))
     _make_war_ruins(city)
+    _make_environment_props(city)
 
 func _make_war_ruins(parent: Node3D) -> void:
     # Visual language: contemporary Eastern-European urban war damage.
@@ -186,6 +187,152 @@ func _make_building(parent: Node3D, pos: Vector3, size: Vector3, floors: int) ->
             window_row.material_override = glass
             body.add_child(window_row)
 
+
+
+func _make_environment_props(parent: Node3D) -> void:
+    # Low-cost static props: civilian vehicles, utility poles and concrete barriers.
+    _make_abandoned_car(parent, Vector3(-6.5, 0.55, -1.5), 18.0, true)
+    _make_abandoned_car(parent, Vector3(6.5, 0.55, 15.0), -24.0, false)
+    _make_abandoned_car(parent, Vector3(-13.0, 0.55, 15.5), 72.0, true)
+
+    _make_utility_pole(parent, Vector3(-2.0, 0.0, 20.0), 8.0)
+    _make_utility_pole(parent, Vector3(9.0, 0.0, 20.0), 10.0)
+    _make_utility_pole(parent, Vector3(21.0, 0.0, 3.0), 82.0)
+
+    _make_barrier(parent, Vector3(3.5, 0.45, 11.0), 12.0)
+    _make_barrier(parent, Vector3(-5.0, 0.45, -9.0), -8.0)
+    _make_barrier(parent, Vector3(12.0, 0.45, -3.0), 88.0)
+
+func _make_abandoned_car(parent: Node3D, pos: Vector3, yaw: float, damaged: bool) -> void:
+    var body := StaticBody3D.new()
+    body.name = "AbandonedCar"
+    body.position = pos
+    body.rotation_degrees.y = yaw
+    parent.add_child(body)
+
+    var car_mat := StandardMaterial3D.new()
+    car_mat.albedo_color = Color(0.16, 0.16, 0.15) if damaged else Color(0.20, 0.22, 0.23)
+    car_mat.roughness = 0.88
+
+    var chassis := MeshInstance3D.new()
+    var chassis_box := BoxMesh.new()
+    chassis_box.size = Vector3(3.4, 0.7, 1.55)
+    chassis.mesh = chassis_box
+    chassis.position.y = 0.45
+    chassis.material_override = car_mat
+    body.add_child(chassis)
+
+    var cabin := MeshInstance3D.new()
+    var cabin_box := BoxMesh.new()
+    cabin_box.size = Vector3(1.75, 0.72, 1.35)
+    cabin.mesh = cabin_box
+    cabin.position = Vector3(-0.1, 1.0, 0)
+    cabin.material_override = car_mat
+    body.add_child(cabin)
+
+    var glass_mat := StandardMaterial3D.new()
+    glass_mat.albedo_color = Color(0.035, 0.045, 0.05)
+    glass_mat.roughness = 0.82
+
+    for side in [-1.0, 1.0]:
+        var window := MeshInstance3D.new()
+        var window_box := BoxMesh.new()
+        window_box.size = Vector3(1.05, 0.34, 0.04)
+        window.mesh = window_box
+        window.position = Vector3(-0.1, 1.02, side * 0.69)
+        window.material_override = glass_mat
+        body.add_child(window)
+
+    for x in [-1.15, 1.15]:
+        for z in [-0.86, 0.86]:
+            var wheel := MeshInstance3D.new()
+            var wheel_box := BoxMesh.new()
+            wheel_box.size = Vector3(0.58, 0.62, 0.24)
+            wheel.mesh = wheel_box
+            wheel.position = Vector3(x, 0.38, z)
+            wheel.material_override = glass_mat
+            body.add_child(wheel)
+
+    if damaged:
+        var scorch := MeshInstance3D.new()
+        var scorch_box := BoxMesh.new()
+        scorch_box.size = Vector3(0.8, 0.05, 1.2)
+        scorch.mesh = scorch_box
+        scorch.position = Vector3(0.65, 0.82, 0)
+        var scorch_mat := StandardMaterial3D.new()
+        scorch_mat.albedo_color = Color(0.035, 0.03, 0.028)
+        scorch_mat.roughness = 1.0
+        scorch.material_override = scorch_mat
+        body.add_child(scorch)
+
+    var collision := CollisionShape3D.new()
+    var shape := BoxShape3D.new()
+    shape.size = Vector3(3.5, 1.25, 1.65)
+    collision.shape = shape
+    collision.position.y = 0.65
+    body.add_child(collision)
+
+func _make_utility_pole(parent: Node3D, pos: Vector3, yaw: float) -> void:
+    var pole := Node3D.new()
+    pole.name = "UtilityPole"
+    pole.position = pos
+    pole.rotation_degrees.y = yaw
+    parent.add_child(pole)
+
+    var wood_mat := StandardMaterial3D.new()
+    wood_mat.albedo_color = Color(0.12, 0.105, 0.09)
+    wood_mat.roughness = 1.0
+
+    var post := MeshInstance3D.new()
+    var post_box := BoxMesh.new()
+    post_box.size = Vector3(0.24, 6.5, 0.24)
+    post.mesh = post_box
+    post.position.y = 3.25
+    post.material_override = wood_mat
+    pole.add_child(post)
+
+    var arm := MeshInstance3D.new()
+    var arm_box := BoxMesh.new()
+    arm_box.size = Vector3(2.8, 0.16, 0.16)
+    arm.mesh = arm_box
+    arm.position = Vector3(0, 6.05, 0)
+    arm.material_override = wood_mat
+    pole.add_child(arm)
+
+    var insulator_mat := StandardMaterial3D.new()
+    insulator_mat.albedo_color = Color(0.28, 0.29, 0.27)
+    insulator_mat.roughness = 0.7
+    for x in [-1.1, 0.0, 1.1]:
+        var insulator := MeshInstance3D.new()
+        var cap := BoxMesh.new()
+        cap.size = Vector3(0.22, 0.32, 0.22)
+        insulator.mesh = cap
+        insulator.position = Vector3(x, 6.28, 0)
+        insulator.material_override = insulator_mat
+        pole.add_child(insulator)
+
+func _make_barrier(parent: Node3D, pos: Vector3, yaw: float) -> void:
+    var body := StaticBody3D.new()
+    body.name = "ConcreteBarrier"
+    body.position = pos
+    body.rotation_degrees.y = yaw
+    parent.add_child(body)
+
+    var mesh := MeshInstance3D.new()
+    var box := BoxMesh.new()
+    box.size = Vector3(3.0, 0.9, 0.65)
+    mesh.mesh = box
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.23, 0.22, 0.20)
+    material.roughness = 0.98
+    mesh.material_override = material
+    body.add_child(mesh)
+
+    var collision := CollisionShape3D.new()
+    var shape := BoxShape3D.new()
+    shape.size = box.size
+    collision.shape = shape
+    body.add_child(collision)
 
 func _make_wall(parent: Node3D, pos: Vector3, size: Vector3) -> void:
     _make_cover(parent, pos, size)
@@ -393,6 +540,55 @@ func take_damage(amount: float) -> void:
         status.text = "PLAYER HIT  •  HP %d" % int(player_health)
     if player_health <= 0.0 and player:
         player.set_physics_process(false)
+
+
+func _physics_process(delta: float) -> void:
+    if fire_cooldown > 0.0:
+        fire_cooldown = maxf(fire_cooldown - delta, 0.0)
+    if reload_left > 0.0:
+        reload_left = maxf(reload_left - delta, 0.0)
+        if reload_left <= 0.0:
+            var needed := magazine_size - ammo
+            var loaded := mini(needed, reserve_ammo)
+            ammo += loaded
+            reserve_ammo -= loaded
+            _update_weapon_hud()
+
+    if not player or not player.is_physics_processing():
+        return
+
+    var input_vector := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+    if input_vector == Vector2.ZERO:
+        input_vector = touch_move
+
+    var local_direction := Vector3(input_vector.x, 0.0, input_vector.y)
+    var world_direction := player.global_transform.basis * local_direction
+    world_direction.y = 0.0
+    if world_direction.length() > 1.0:
+        world_direction = world_direction.normalized()
+
+    player.velocity.x = world_direction.x * speed
+    player.velocity.z = world_direction.z * speed
+    player.move_and_slide()
+
+    if Input.is_action_pressed("fire") and fire_button == null:
+        _fire_weapon()
+
+func _start_reload() -> void:
+    if reload_left > 0.0 or ammo >= magazine_size or reserve_ammo <= 0:
+        return
+    reload_left = reload_time
+    var status := get_node("HUD/Status") as Label
+    if status:
+        status.text = "RELOADING..."
+
+func _update_weapon_hud() -> void:
+    if weapon_label:
+        weapon_label.text = "RIFLE  %d / %d" % [ammo, reserve_ammo]
+
+func _update_loot_hud() -> void:
+    if loot_label:
+        loot_label.text = "LOOT  •  BAT %d  •  PARTS %d" % [loot_count["BATTERY"], loot_count["PARTS"]]
 
 func _fire_weapon() -> void:
     if reload_left > 0.0 or fire_cooldown > 0.0:
