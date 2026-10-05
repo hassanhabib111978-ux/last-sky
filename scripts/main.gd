@@ -86,6 +86,29 @@ func _build_city_block() -> void:
     _make_cover(city, Vector3(-2, 0.7, 8), Vector3(4, 1.4, 2))
     _make_cover(city, Vector3(10, 0.7, -6), Vector3(3, 1.4, 3))
     _make_cover(city, Vector3(-10, 0.7, -2), Vector3(3, 1.4, 4))
+    _make_war_ruins(city)
+
+func _make_war_ruins(parent: Node3D) -> void:
+    # Visual language: contemporary Eastern-European urban war damage.
+    _make_damage_facade(parent, Vector3(-15, 7.1, -13.0), Vector3(6.0, 1.8, 0.45), -11.0)
+    _make_damage_facade(parent, Vector3(12.0, 8.8, -18.0), Vector3(5.5, 1.5, 0.45), 8.0)
+    _make_damage_facade(parent, Vector3(-19.5, 4.8, 12.0), Vector3(4.0, 1.3, 0.4), -7.0)
+
+    _make_cover(parent, Vector3(2, 0.65, -15), Vector3(4.5, 1.3, 1.0))
+    _make_cover(parent, Vector3(14, 0.55, 7), Vector3(2.8, 1.1, 1.8))
+
+func _make_damage_facade(parent: Node3D, pos: Vector3, size: Vector3, tilt: float) -> void:
+    var slab := MeshInstance3D.new()
+    var mesh := BoxMesh.new()
+    mesh.size = size
+    slab.mesh = mesh
+    slab.position = pos
+    slab.rotation_degrees.z = tilt
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.18, 0.17, 0.16)
+    material.roughness = 1.0
+    slab.material_override = material
+    parent.add_child(slab)
 
 func _make_building(parent: Node3D, pos: Vector3, size: Vector3, floors: int) -> void:
     var body := StaticBody3D.new()
