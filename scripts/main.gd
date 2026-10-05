@@ -18,6 +18,9 @@ var aim_sensitivity := 0.012
 var camera_pitch := -14.0
 var joystick_base: ColorRect
 var joystick_knob: ColorRect
+var fire_cooldown := 0.0
+var fire_interval := 0.22
+var crosshair: Label
 
 func _ready() -> void:
     _build_world()
@@ -141,6 +144,14 @@ func _build_mobile_controls() -> void:
     fire_button.pressed.connect(_fire_weapon)
     hud.add_child(fire_button)
 
+    crosshair = Label.new()
+    crosshair.text = "+"
+    crosshair.set_anchors_preset(Control.PRESET_CENTER)
+    crosshair.position = Vector2(-12, -22)
+    crosshair.add_theme_font_size_override("font_size", 30)
+    crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    hud.add_child(crosshair)
+
     var aim_hint := Label.new()
     aim_hint.text = "DRAG TO AIM"
     aim_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -152,6 +163,9 @@ func _build_mobile_controls() -> void:
     joystick_center = Vector2(122, get_viewport().size.y - 90)
 
 func _fire_weapon() -> void:
+    if fire_cooldown > 0.0:
+        return
+    fire_cooldown = fire_interval
     if not drone or not is_instance_valid(drone):
         return
     var to_drone := drone.global_position - camera.global_position
