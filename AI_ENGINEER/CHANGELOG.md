@@ -13,3 +13,5 @@ Repository structure: PASS
 Gameplay build: NOT STARTED
 Android export: NOT STARTED
 Live Godot MCP connection: NOT STARTED
+
+- 2026-10-05: Added reusable drone controller and connected touch movement plus the first fire loop. Runtime validation in Godot is still pending.
