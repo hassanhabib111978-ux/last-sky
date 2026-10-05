@@ -103,6 +103,16 @@ func _build_drone() -> void:
     material.metallic = 0.8
     material.roughness = 0.28
     drone.material_override = material
+
+    var drone_body := StaticBody3D.new()
+    drone_body.name = "DroneCollision"
+    var drone_collision := CollisionShape3D.new()
+    var drone_shape := SphereShape3D.new()
+    drone_shape.radius = 0.5
+    drone_collision.shape = drone_shape
+    drone_body.add_child(drone_collision)
+    drone_body.set_meta("damage_target", drone)
+    drone.add_child(drone_body)
     add_child(drone)
 
 func _build_hud() -> void:
@@ -185,18 +195,27 @@ func _fire_weapon() -> void:
     ammo -= 1
     _update_weapon_hud()
     fire_cooldown = fire_interval
-    if not drone or not is_instance_valid(drone):
+    if not camera:
         return
-    var to_drone := drone.global_position - camera.global_position
-    if to_drone.length() <= 25.0 and camera.global_basis.z.dot(to_drone.normalized()) < -0.65:
-        drone.take_damage(20.0)
-        var status := get_node("HUD/Status") as Label
-        if status:
-            status.text = "HIT  •  DRONE HP %d" % int(drone.health)
-    else:
-        var status := get_node("HUD/Status") as Label
-        if status:
-            status.text = "SHOT MISSED"
+    var from := camera.global_position
+    var direction := -camera.global_basis.z
+    var to := from + direction * 80.0
+    var query := PhysicsRayQueryParameters3D.create(from, to)
+    query.exclude = [player.get_rid()]
+    query.collision_mask = 1
+    var result := get_world_3d().direct_space_state.intersect_ray(query)
+    var status := get_node("HUD/Status") as Label
+    if result and result.has("collider"):
+        var collider = result["collider"]
+        if collider and collider.has_meta("damage_target"):
+            var target = collider.get_meta("damage_target")
+            if target and is_instance_valid(target):
+                target.take_damage(20.0)
+                if status:
+                    status.text = "HIT  •  DRONE HP %d" % int(target.health)
+                return
+    if status:
+        status.text = "SHOT MISSED"
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventScreenTouch:
