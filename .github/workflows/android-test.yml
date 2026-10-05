@@ -6,7 +6,7 @@ on:
     branches: ["main"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android-apk:
@@ -29,13 +29,17 @@ jobs:
           echo "/usr/local/lib/android/sdk/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           echo "/usr/local/lib/android/sdk/platform-tools" >> "$GITHUB_PATH"
           yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null || true
-          /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager             "platform-tools"             "platforms;android-35"             "build-tools;35.0.1"
+          /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.1"
 
       - name: Download Godot 4.7.2
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/godot"
-          curl -L --fail --retry 3 -o "$RUNNER_TEMP/godot/godot.zip"             "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip"
+          curl -L --fail --retry 3 -o "$RUNNER_TEMP/godot/godot.zip" \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip"
           unzip -q "$RUNNER_TEMP/godot/godot.zip" -d "$RUNNER_TEMP/godot"
           mv "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" "$RUNNER_TEMP/godot/godot"
           chmod +x "$RUNNER_TEMP/godot/godot"
@@ -44,10 +48,12 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/godot/templates"
-          curl -L --fail --retry 3 -o "$RUNNER_TEMP/godot/templates.tpz"             "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz"
+          curl -L --fail --retry 3 -o "$RUNNER_TEMP/godot/templates.tpz" \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz"
           unzip -q "$RUNNER_TEMP/godot/templates.tpz" -d "$RUNNER_TEMP/godot/templates"
           mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
-          cp -R "$RUNNER_TEMP/godot/templates/templates/."             "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
+          cp -R "$RUNNER_TEMP/godot/templates/templates/." \
+            "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
 
       - name: Validate Godot project
         shell: bash
@@ -58,7 +64,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p build
-          "$RUNNER_TEMP/godot/godot" --headless --path .             --export-debug "Android Debug" build/last-sky-debug.apk
+          "$RUNNER_TEMP/godot/godot" --headless --path . \
+            --export-debug "Android Debug" build/last-sky-debug.apk
 
       - name: Verify APK
         shell: bash
@@ -66,9 +73,19 @@ jobs:
           test -s build/last-sky-debug.apk
           ls -lh build/last-sky-debug.apk
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: LAST-SKY-Android-Test
           path: build/last-sky-debug.apk
           if-no-files-found: error
+
+      - name: Publish direct APK release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-test
+          name: LAST SKY Android Test
+          prerelease: true
+          make_latest: false
+          files: build/last-sky-debug.apk
+          overwrite_files: true
