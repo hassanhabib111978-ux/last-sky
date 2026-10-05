@@ -25,3 +25,5 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Rebuilt the Scout Drone as a CharacterBody3D enemy with pursuit, hover behavior, attack range/cooldown, player damage, health, hit flash, and destruction sequence.
 
 - 2026-10-05: Added first Loot system: destroyed Scout Drones emit loot drops, collectible pickups add ammo/resources, and pickups expire automatically.
+
+- 2026-10-05: Expanded first Loot loop to three resource types (AMMO, BATTERY, PARTS), added resource HUD counters, randomized drone drops, and animated pickups.
