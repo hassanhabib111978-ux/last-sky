@@ -114,6 +114,7 @@ func _build_drone() -> void:
     shape.radius = 0.5
     collision.shape = shape
     drone.add_child(collision)
+    drone.set_meta("damage_target", drone)
 
     add_child(drone)
 
