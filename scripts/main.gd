@@ -8,12 +8,18 @@ var camera: Camera3D
 var drone: MeshInstance3D
 var drone_angle := 0.0
 var speed := 5.0
+var touch_move := Vector2.ZERO
+var fire_button: Button
+var drone_health := 60.0
 
 func _ready() -> void:
     _build_world()
     _build_player()
     _build_drone()
     _build_hud()
+    _build_mobile_controls()
+    drone.set_script(preload("res://scripts/drone.gd"))
+    drone.set_target(player)
 
 func _build_world() -> void:
     var environment := WorldEnvironment.new()
@@ -101,16 +107,52 @@ func _build_hud() -> void:
     status.add_theme_font_size_override("font_size", 16)
     layer.add_child(status)
 
+func _build_mobile_controls() -> void:
+    fire_button = Button.new()
+    fire_button.text = "FIRE"
+    fire_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+    fire_button.position = Vector2(-190, -190)
+    fire_button.size = Vector2(150, 150)
+    fire_button.add_theme_font_size_override("font_size", 26)
+    fire_button.pressed.connect(_fire_weapon)
+    get_node("HUD").add_child(fire_button)
+
+func _fire_weapon() -> void:
+    if not drone or not is_instance_valid(drone):
+        return
+    var to_drone := drone.global_position - camera.global_position
+    if to_drone.length() <= 25.0 and camera.global_basis.z.dot(to_drone.normalized()) < -0.65:
+        drone.take_damage(20.0)
+        var status := get_node("HUD/Status") as Label
+        if status:
+            status.text = "HIT  •  DRONE HP %d" % int(drone.health)
+    else:
+        var status := get_node("HUD/Status") as Label
+        if status:
+            status.text = "SHOT MISSED"
+
+func _unhandled_input(event: InputEvent) -> void:
+    if event is InputEventScreenTouch:
+        if event.pressed and event.position.x < get_viewport().size.x * 0.48 and event.position.y > get_viewport().size.y * 0.55:
+            touch_move = Vector2.ZERO
+        elif not event.pressed:
+            touch_move = Vector2.ZERO
+    elif event is InputEventScreenDrag and event.position.x < get_viewport().size.x * 0.48:
+        var center := Vector2(130, get_viewport().size.y - 130)
+        var offset := (event.position - center) / 86.0
+        touch_move = offset.limit_length(1.0)
+
 func _physics_process(delta: float) -> void:
     if not player:
         return
     var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+    if touch_move.length() > 0.05:
+        input = touch_move
     var direction := Vector3(input.x, 0, input.y)
     player.velocity.x = direction.x * speed
     player.velocity.z = direction.z * speed
     player.move_and_slide()
 
     drone_angle += delta * 0.7
-    if drone:
-        drone.position = Vector3(cos(drone_angle) * 7.0, 2.5 + sin(drone_angle * 2.0) * 0.5, sin(drone_angle) * 7.0 - 3.0)
+    if drone and drone.is_inside_tree():
         drone.look_at(player.global_position + Vector3.UP * 1.0)
