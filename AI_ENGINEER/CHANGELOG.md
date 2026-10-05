@@ -17,3 +17,5 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Added reusable drone controller and connected touch movement plus the first fire loop. Runtime validation in Godot is still pending.
 
 - 2026-10-05: Upgraded mobile input to dual-touch controls: virtual movement joystick, independent right-side aim drag, touch IDs for simultaneous fingers, and larger fire control.
+
+- 2026-10-05: Polished mobile combat feel with dual-touch aiming feedback, centered crosshair, fire cooldown, movement acceleration, and improved Scout Drone combat spacing.
