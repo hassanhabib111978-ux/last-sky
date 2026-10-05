@@ -11,6 +11,13 @@ var speed := 5.0
 var touch_move := Vector2.ZERO
 var fire_button: Button
 var drone_health := 60.0
+var move_touch_id := -1
+var aim_touch_id := -1
+var joystick_center := Vector2.ZERO
+var aim_sensitivity := 0.012
+var camera_pitch := -14.0
+var joystick_base: ColorRect
+var joystick_knob: ColorRect
 
 func _ready() -> void:
     _build_world()
@@ -108,14 +115,41 @@ func _build_hud() -> void:
     layer.add_child(status)
 
 func _build_mobile_controls() -> void:
+    var hud := get_node("HUD") as CanvasLayer
+
+    joystick_base = ColorRect.new()
+    joystick_base.color = Color(0.08, 0.10, 0.13, 0.62)
+    joystick_base.position = Vector2(32, 0)
+    joystick_base.size = Vector2(180, 180)
+    joystick_base.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+    joystick_base.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    hud.add_child(joystick_base)
+
+    joystick_knob = ColorRect.new()
+    joystick_knob.color = Color(0.72, 0.78, 0.86, 0.92)
+    joystick_knob.position = Vector2(60, 60)
+    joystick_knob.size = Vector2(60, 60)
+    joystick_knob.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    joystick_base.add_child(joystick_knob)
+
     fire_button = Button.new()
     fire_button.text = "FIRE"
     fire_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-    fire_button.position = Vector2(-190, -190)
-    fire_button.size = Vector2(150, 150)
-    fire_button.add_theme_font_size_override("font_size", 26)
+    fire_button.position = Vector2(-205, -205)
+    fire_button.size = Vector2(160, 160)
+    fire_button.add_theme_font_size_override("font_size", 28)
     fire_button.pressed.connect(_fire_weapon)
-    get_node("HUD").add_child(fire_button)
+    hud.add_child(fire_button)
+
+    var aim_hint := Label.new()
+    aim_hint.text = "DRAG TO AIM"
+    aim_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+    aim_hint.position = Vector2(-430, -78)
+    aim_hint.add_theme_font_size_override("font_size", 14)
+    aim_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    hud.add_child(aim_hint)
+
+    joystick_center = Vector2(122, get_viewport().size.y - 90)
 
 func _fire_weapon() -> void:
     if not drone or not is_instance_valid(drone):
@@ -133,26 +167,39 @@ func _fire_weapon() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventScreenTouch:
-        if event.pressed and event.position.x < get_viewport().size.x * 0.48 and event.position.y > get_viewport().size.y * 0.55:
-            touch_move = Vector2.ZERO
-        elif not event.pressed:
-            touch_move = Vector2.ZERO
-    elif event is InputEventScreenDrag and event.position.x < get_viewport().size.x * 0.48:
-        var center := Vector2(130, get_viewport().size.y - 130)
-        var offset := (event.position - center) / 86.0
-        touch_move = offset.limit_length(1.0)
+        if event.pressed:
+            if event.position.x < get_viewport().size.x * 0.42 and event.position.y > get_viewport().size.y * 0.55 and move_touch_id == -1:
+                move_touch_id = event.index
+                joystick_center = event.position
+                _update_joystick(event.position)
+            elif event.position.x > get_viewport().size.x * 0.42 and aim_touch_id == -1:
+                aim_touch_id = event.index
+        else:
+            if event.index == move_touch_id:
+                move_touch_id = -1
+                touch_move = Vector2.ZERO
+                _reset_joystick()
+            if event.index == aim_touch_id:
+                aim_touch_id = -1
+    elif event is InputEventScreenDrag:
+        if event.index == move_touch_id:
+            _update_joystick(event.position)
+        elif event.index == aim_touch_id:
+            var delta := event.screen_relative
+            player.rotate_y(-delta.x * aim_sensitivity)
+            camera_pitch = clamp(camera_pitch - delta.y * aim_sensitivity, -55.0, 25.0)
+            camera.rotation_degrees.x = camera_pitch
 
-func _physics_process(delta: float) -> void:
-    if not player:
-        return
-    var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-    if touch_move.length() > 0.05:
-        input = touch_move
-    var direction := Vector3(input.x, 0, input.y)
-    player.velocity.x = direction.x * speed
-    player.velocity.z = direction.z * speed
-    player.move_and_slide()
+func _update_joystick(position: Vector2) -> void:
+    var offset := position - joystick_center
+    var max_radius := 72.0
+    if offset.length() > max_radius:
+        offset = offset.normalized() * max_radius
+    touch_move = offset / max_radius
+    if joystick_base and joystick_knob:
+        joystick_knob.position = Vector2(60, 60) + offset
 
-    drone_angle += delta * 0.7
-    if drone and drone.is_inside_tree():
-        drone.look_at(player.global_position + Vector3.UP * 1.0)
+func _reset_joystick() -> void:
+    if joystick_knob:
+        joystick_knob.position = Vector2(60, 60)
+
