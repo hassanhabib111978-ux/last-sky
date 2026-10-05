@@ -27,7 +27,7 @@ jobs:
       - name: Install Android requirements
         shell: bash
         run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.1" "cmdline-tools;latest"
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.1"
           yes | sdkmanager --licenses >/dev/null || true
 
       - name: Download Godot 4.7.2
