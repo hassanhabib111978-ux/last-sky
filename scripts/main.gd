@@ -40,13 +40,10 @@ var wave_active := false
 func _ready() -> void:
     _build_world()
     _build_player()
-    _build_drone()
+    # Wave spawns are the only combat enemy source; no legacy singleton drone.
     _build_hud()
     _build_mobile_controls()
     _start_next_wave()
-    drone.set_script(preload("res://scripts/drone.gd"))
-    drone.set_target(player)
-    drone.loot_dropped.connect(_spawn_loot)
 
 func _build_world() -> void:
     var environment := WorldEnvironment.new()
@@ -266,8 +263,8 @@ func _spawn_combat_drone(spawn_position: Vector3) -> void:
     enemy.set_script(preload("res://scripts/drone.gd"))
     enemy.set_target(player)
     enemy.set_meta("tactical_cover", _get_tactical_cover_positions())
-    enemy.loot_dropped.connect(_spawn_loot)
-    enemy.destroyed.connect(_on_combat_drone_destroyed)
+    enemy.connect("loot_dropped", _spawn_loot)
+    enemy.connect("destroyed", _on_combat_drone_destroyed)
     wave_alive += 1
 
 func _on_combat_drone_destroyed() -> void:
@@ -486,7 +483,7 @@ func _build_player() -> void:
 
     camera = Camera3D.new()
     camera.position = Vector3(0, 1.65, 0.0)
-    camera.rotation_degrees = Vector3(-14, 0, 0)
+    camera.rotation_degrees = Vector3(-6, 0, 0)
     player.add_child(camera)
     camera.current = true
 
