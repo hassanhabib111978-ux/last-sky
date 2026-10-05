@@ -90,38 +90,79 @@ func _build_city_block() -> void:
 func _make_building(parent: Node3D, pos: Vector3, size: Vector3, floors: int) -> void:
     var body := StaticBody3D.new()
     body.position = pos
-    body.name = "Building"
+    body.name = "RuinedBuilding"
     parent.add_child(body)
 
-    var mesh := MeshInstance3D.new()
-    var box := BoxMesh.new()
-    box.size = size
-    mesh.mesh = box
     var material := StandardMaterial3D.new()
-    material.albedo_color = Color(0.10 + floors * 0.015, 0.11, 0.12)
-    material.roughness = 0.9
-    mesh.material_override = material
-    body.add_child(mesh)
+    material.albedo_color = Color(0.10 + floors * 0.015, 0.105, 0.105)
+    material.roughness = 0.96
+
+    var shell := MeshInstance3D.new()
+    var shell_box := BoxMesh.new()
+    shell_box.size = Vector3(size.x * 0.88, size.y * 0.78, size.z * 0.9)
+    shell.mesh = shell_box
+    shell.position = Vector3(0, -size.y * 0.06, 0)
+    shell.material_override = material
+    body.add_child(shell)
 
     var collision := CollisionShape3D.new()
     var shape := BoxShape3D.new()
-    shape.size = size
+    shape.size = shell_box.size
     collision.shape = shape
+    collision.position = shell.position
     body.add_child(collision)
 
+    var debris_mat := StandardMaterial3D.new()
+    debris_mat.albedo_color = Color(0.13, 0.12, 0.115)
+    debris_mat.roughness = 1.0
+
+    for i in range(2):
+        var chunk := MeshInstance3D.new()
+        var chunk_box := BoxMesh.new()
+        chunk_box.size = Vector3(size.x * (0.25 + i * 0.08), size.y * 0.22, size.z * (0.35 + i * 0.05))
+        chunk.mesh = chunk_box
+        chunk.position = Vector3(
+            (-size.x * 0.27) if i == 0 else (size.x * 0.28),
+            size.y * 0.43,
+            (size.z * 0.12) if i == 0 else (-size.z * 0.16)
+        )
+        chunk.rotation_degrees = Vector3(0, 0, -7 if i == 0 else 5)
+        chunk.material_override = debris_mat
+        body.add_child(chunk)
+
+    for i in range(5):
+        var rubble := MeshInstance3D.new()
+        var rubble_box := BoxMesh.new()
+        rubble_box.size = Vector3(0.7 + float(i % 2) * 0.5, 0.35 + float(i % 3) * 0.18, 0.6 + float(i % 2) * 0.35)
+        rubble.mesh = rubble_box
+        rubble.position = Vector3(
+            -size.x * 0.42 + float(i) * size.x * 0.18,
+            rubble_box.size.y * 0.5,
+            size.z * 0.52 + sin(float(i)) * 0.45
+        )
+        rubble.rotation_degrees = Vector3(0, float(i) * 31.0, float(i % 2) * 9.0)
+        rubble.material_override = debris_mat
+        body.add_child(rubble)
+
     for floor_index in range(floors):
-        var window_row := MeshInstance3D.new()
-        var window := BoxMesh.new()
-        window.size = Vector3(size.x * 0.55, 0.22, 0.04)
-        window_row.mesh = window
-        window_row.position = Vector3(0, -size.y * 0.5 + 1.5 + floor_index * 2.3, size.z * 0.5 + 0.03)
-        var glass := StandardMaterial3D.new()
-        glass.albedo_color = Color(0.05, 0.16, 0.20)
-        glass.emission_enabled = true
-        glass.emission = Color(0.02, 0.08, 0.10)
-        glass.emission_energy_multiplier = 0.5
-        window_row.material_override = glass
-        body.add_child(window_row)
+        for window_index in range(3):
+            if (floor_index + window_index) % 4 == 0:
+                continue
+            var window_row := MeshInstance3D.new()
+            var window := BoxMesh.new()
+            window.size = Vector3(size.x * 0.14, 0.18, 0.05)
+            window_row.mesh = window
+            window_row.position = Vector3(
+                -size.x * 0.28 + window_index * size.x * 0.28,
+                -size.y * 0.34 + 1.35 + floor_index * 2.25,
+                size.z * 0.455
+            )
+            var glass := StandardMaterial3D.new()
+            glass.albedo_color = Color(0.025, 0.045, 0.05)
+            glass.roughness = 0.75
+            window_row.material_override = glass
+            body.add_child(window_row)
+
 
 func _make_wall(parent: Node3D, pos: Vector3, size: Vector3) -> void:
     _make_cover(parent, pos, size)
