@@ -30,6 +30,12 @@ var reload_left := 0.0
 var weapon_label: Label
 var loot_count := {"AMMO": 0, "BATTERY": 0, "PARTS": 0}
 var loot_label: Label
+var drone_spawn_points: Array[Vector3] = []
+var wave_number := 0
+var wave_alive := 0
+var wave_timer := 0.0
+var next_wave_delay := 8.0
+var wave_active := false
 
 func _ready() -> void:
     _build_world()
@@ -37,6 +43,7 @@ func _ready() -> void:
     _build_drone()
     _build_hud()
     _build_mobile_controls()
+    _start_next_wave()
     drone.set_script(preload("res://scripts/drone.gd"))
     drone.set_target(player)
     drone.loot_dropped.connect(_spawn_loot)
@@ -88,6 +95,7 @@ func _build_city_block() -> void:
     _make_cover(city, Vector3(-10, 0.7, -2), Vector3(3, 1.4, 4))
     _make_war_ruins(city)
     _make_environment_props(city)
+    _setup_gameplay_space(city)
 
 func _make_war_ruins(parent: Node3D) -> void:
     # Visual language: contemporary Eastern-European urban war damage.
@@ -188,6 +196,87 @@ func _make_building(parent: Node3D, pos: Vector3, size: Vector3, floors: int) ->
             body.add_child(window_row)
 
 
+
+func _setup_gameplay_space(parent: Node3D) -> void:
+    # Spawn lanes keep enemies away from the player start while using the existing city cover.
+    drone_spawn_points = [
+        Vector3(-28, 2.8, -26),
+        Vector3(27, 2.8, -27),
+        Vector3(-30, 2.8, 24),
+        Vector3(28, 2.8, 24),
+        Vector3(0, 2.8, -30),
+        Vector3(0, 2.8, 28)
+    ]
+    for point in drone_spawn_points:
+        _make_spawn_marker(parent, point)
+
+func _make_spawn_marker(parent: Node3D, pos: Vector3) -> void:
+    var marker := MeshInstance3D.new()
+    marker.name = "DroneSpawnMarker"
+    var mesh := CylinderMesh.new()
+    mesh.top_radius = 0.16
+    mesh.bottom_radius = 0.24
+    mesh.height = 0.08
+    marker.mesh = mesh
+    marker.position = Vector3(pos.x, 0.04, pos.z)
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.16, 0.22, 0.24)
+    material.roughness = 1.0
+    marker.material_override = material
+    parent.add_child(marker)
+
+func _start_next_wave() -> void:
+    if wave_active or not player:
+        return
+    wave_number += 1
+    wave_active = true
+    wave_timer = 0.0
+    var count := mini(2 + wave_number, 5)
+    for i in range(count):
+        var spawn := drone_spawn_points[(wave_number + i) % drone_spawn_points.size()]
+        _spawn_combat_drone(spawn)
+    var status := get_node("HUD/Status") as Label
+    if status:
+        status.text = "WAVE %d  •  %d SCOUT DRONES" % [wave_number, count]
+
+func _spawn_combat_drone(spawn_position: Vector3) -> void:
+    var enemy := CharacterBody3D.new()
+    enemy.name = "ScoutDrone_%d_%d" % [wave_number, wave_alive + 1]
+    enemy.position = spawn_position
+    var visual := MeshInstance3D.new()
+    visual.name = "Visual"
+    var sphere := SphereMesh.new()
+    sphere.radius = 0.45
+    sphere.height = 0.9
+    visual.mesh = sphere
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.18, 0.2, 0.24)
+    material.metallic = 0.8
+    material.roughness = 0.28
+    visual.material_override = material
+    enemy.add_child(visual)
+
+    var collision := CollisionShape3D.new()
+    var shape := SphereShape3D.new()
+    shape.radius = 0.5
+    collision.shape = shape
+    enemy.add_child(collision)
+    enemy.set_meta("damage_target", enemy)
+    add_child(enemy)
+    enemy.set_script(preload("res://scripts/drone.gd"))
+    enemy.set_target(player)
+    enemy.loot_dropped.connect(_spawn_loot)
+    enemy.destroyed.connect(_on_combat_drone_destroyed)
+    wave_alive += 1
+
+func _on_combat_drone_destroyed() -> void:
+    wave_alive = maxi(wave_alive - 1, 0)
+    if wave_alive == 0:
+        wave_active = false
+        wave_timer = next_wave_delay
+        var status := get_node("HUD/Status") as Label
+        if status:
+            status.text = "AREA CLEAR  •  NEXT WAVE IN %ds" % int(next_wave_delay)
 
 func _make_environment_props(parent: Node3D) -> void:
     # Low-cost static props: civilian vehicles, utility poles and concrete barriers.
@@ -543,6 +632,11 @@ func take_damage(amount: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+    if not wave_active and wave_timer > 0.0:
+        wave_timer = maxf(wave_timer - delta, 0.0)
+        if wave_timer <= 0.0:
+            _start_next_wave()
+
     if fire_cooldown > 0.0:
         fire_cooldown = maxf(fire_cooldown - delta, 0.0)
     if reload_left > 0.0:
