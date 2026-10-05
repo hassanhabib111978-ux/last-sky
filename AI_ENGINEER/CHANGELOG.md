@@ -21,3 +21,5 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Polished mobile combat feel with dual-touch aiming feedback, centered crosshair, fire cooldown, movement acceleration, and improved Scout Drone combat spacing.
 
 - 2026-10-05: Replaced proximity-based weapon hits with real 3D physics raycast collision and drone collision metadata; added rifle magazine/reserve ammo and reload cycle.
+
+- 2026-10-05: Rebuilt the Scout Drone as a CharacterBody3D enemy with pursuit, hover behavior, attack range/cooldown, player damage, health, hit flash, and destruction sequence.
