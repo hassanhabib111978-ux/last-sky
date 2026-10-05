@@ -38,6 +38,7 @@ func _ready() -> void:
     _build_mobile_controls()
     drone.set_script(preload("res://scripts/drone.gd"))
     drone.set_target(player)
+    drone.loot_dropped.connect(_spawn_loot)
 
 func _build_world() -> void:
     var environment := WorldEnvironment.new()
