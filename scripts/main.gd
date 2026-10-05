@@ -29,6 +29,7 @@ var reload_time := 1.25
 var reload_left := 0.0
 var weapon_label: Label
 var loot_count := {"AMMO": 0, "BATTERY": 0, "PARTS": 0}
+var loot_label: Label
 
 func _ready() -> void:
     _build_world()
@@ -181,6 +182,14 @@ func _build_mobile_controls() -> void:
     weapon_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     hud.add_child(weapon_label)
 
+    loot_label = Label.new()
+    loot_label.text = "LOOT  •  BAT 0  •  PARTS 0"
+    loot_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+    loot_label.position = Vector2(-360, 62)
+    loot_label.add_theme_font_size_override("font_size", 16)
+    loot_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    hud.add_child(loot_label)
+
     var aim_hint := Label.new()
     aim_hint.text = "DRAG TO AIM"
     aim_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -200,11 +209,15 @@ func collect_loot(loot_type: String, amount: int) -> void:
         loot_count["PARTS"] += amount
     loot_count["AMMO"] += amount if loot_type == "AMMO" else 0
     _update_weapon_hud()
+    _update_loot_hud()
     var status := get_node("HUD/Status") as Label
     if status:
         status.text = "LOOT COLLECTED  •  %s +%d" % [loot_type, amount]
 
 func _spawn_loot(at_position: Vector3) -> void:
+    var roll := randi_range(0, 2)
+    var loot_type := ["AMMO", "BATTERY", "PARTS"][roll]
+    var amount := [8, 1, 2][roll]
     var loot := Area3D.new()
     loot.name = "LootPickup"
     loot.set_script(preload("res://scripts/loot_pickup.gd"))
@@ -226,7 +239,7 @@ func _spawn_loot(at_position: Vector3) -> void:
     collision.shape = shape
     loot.add_child(collision)
     add_child(loot)
-    loot.setup("AMMO", 8)
+    loot.setup(loot_type, amount)
 
 func take_damage(amount: float) -> void:
     player_health = maxf(player_health - amount, 0.0)
