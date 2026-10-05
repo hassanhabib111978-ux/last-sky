@@ -609,8 +609,8 @@ func collect_loot(loot_type: String, amount: int) -> void:
 
 func _spawn_loot(at_position: Vector3) -> void:
     var roll := randi_range(0, 2)
-    var loot_type := ["AMMO", "BATTERY", "PARTS"][roll]
-    var amount := [8, 1, 2][roll]
+    var loot_type: String = ["AMMO", "BATTERY", "PARTS"][roll]
+    var amount: int = [8, 1, 2][roll]
     var loot := Area3D.new()
     loot.name = "LootPickup"
     loot.set_script(preload("res://scripts/loot_pickup.gd"))
@@ -747,7 +747,7 @@ func _unhandled_input(event: InputEvent) -> void:
         if event.index == move_touch_id:
             _update_joystick(event.position)
         elif event.index == aim_touch_id:
-            var delta := event.screen_relative
+            var delta: Vector2 = event.screen_relative
             player.rotate_y(-delta.x * aim_sensitivity)
             camera_pitch = clamp(camera_pitch - delta.y * aim_sensitivity, -55.0, 25.0)
             camera.rotation_degrees.x = camera_pitch
