@@ -33,3 +33,12 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Reworked city buildings into partially ruined structures with broken upper sections, missing windows, facade debris, and rubble while preserving collision.
 
 - 2026-10-05: Pushed the abandoned city visual language toward contemporary Eastern-European war-torn urban damage: fractured facade slabs, heavier rubble, irregular damage, and dense improvised cover while keeping the setting fictional and non-factional.
+
+
+## 2026-10-05 — City environment expansion + core movement loop
+- Added low-cost abandoned civilian vehicles, including damaged/scorched variants.
+- Added utility poles and simple street infrastructure for stronger Eastern-European war-torn urban atmosphere.
+- Added concrete barriers/checkpoint-style cover as static gameplay geometry.
+- Restored the player physics/update loop for keyboard and mobile joystick movement, weapon cooldown/reload timing, and HUD refresh helpers.
+- Kept the environment primitive and mobile-conscious for now; final art assets and runtime profiling remain pending.
+- Runtime testing in Godot has not yet been performed in this session.
