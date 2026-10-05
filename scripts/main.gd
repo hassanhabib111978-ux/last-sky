@@ -265,6 +265,7 @@ func _spawn_combat_drone(spawn_position: Vector3) -> void:
     add_child(enemy)
     enemy.set_script(preload("res://scripts/drone.gd"))
     enemy.set_target(player)
+    enemy.set_meta("tactical_cover", _get_tactical_cover_positions())
     enemy.loot_dropped.connect(_spawn_loot)
     enemy.destroyed.connect(_on_combat_drone_destroyed)
     wave_alive += 1
@@ -399,6 +400,20 @@ func _make_utility_pole(parent: Node3D, pos: Vector3, yaw: float) -> void:
         insulator.position = Vector3(x, 6.28, 0)
         insulator.material_override = insulator_mat
         pole.add_child(insulator)
+
+func _has_line_of_sight(from: Vector3, to: Vector3) -> bool:
+    var query := PhysicsRayQueryParameters3D.create(from, to)
+    query.collision_mask = 1
+    query.exclude = [player.get_rid()]
+    var hit := get_world_3d().direct_space_state.intersect_ray(query)
+    return hit.is_empty()
+
+func _get_tactical_cover_positions() -> Array[Vector3]:
+    return [
+        Vector3(-8, 2.8, -8), Vector3(8, 2.8, -10),
+        Vector3(-12, 2.8, 5), Vector3(11, 2.8, 6),
+        Vector3(-2, 2.8, 15), Vector3(3, 2.8, -18)
+    ]
 
 func _make_barrier(parent: Node3D, pos: Vector3, yaw: float) -> void:
     var body := StaticBody3D.new()
