@@ -35,3 +35,6 @@ LAST SKY is built as one connected game system, not as a collection of unrelated
 **Inspect → Understand → Plan → Change → Test → Log**
 
 See AI_ENGINEER/ for the project constitution, memory, and change log.
+
+## Build note
+Android export is automated from the repository so the project can be tested on a real Android device without requiring a desktop editor.
