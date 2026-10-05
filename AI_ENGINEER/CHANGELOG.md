@@ -31,3 +31,5 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Created the first procedural Abandoned City combat block with buildings, cover walls, alley-like lanes, collision, and simple emissive window storytelling.
 
 - 2026-10-05: Reworked city buildings into partially ruined structures with broken upper sections, missing windows, facade debris, and rubble while preserving collision.
+
+- 2026-10-05: Pushed the abandoned city visual language toward contemporary Eastern-European war-torn urban damage: fractured facade slabs, heavier rubble, irregular damage, and dense improvised cover while keeping the setting fictional and non-factional.
