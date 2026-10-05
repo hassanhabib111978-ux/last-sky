@@ -29,3 +29,5 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Expanded first Loot loop to three resource types (AMMO, BATTERY, PARTS), added resource HUD counters, randomized drone drops, and animated pickups.
 
 - 2026-10-05: Created the first procedural Abandoned City combat block with buildings, cover walls, alley-like lanes, collision, and simple emissive window storytelling.
+
+- 2026-10-05: Reworked city buildings into partially ruined structures with broken upper sections, missing windows, facade debris, and rubble while preserving collision.
