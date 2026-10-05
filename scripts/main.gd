@@ -485,7 +485,7 @@ func _build_player() -> void:
     player.add_child(collision)
 
     camera = Camera3D.new()
-    camera.position = Vector3(0, 3.2, 6.5)
+    camera.position = Vector3(0, 1.65, 0.0)
     camera.rotation_degrees = Vector3(-14, 0, 0)
     player.add_child(camera)
     camera.current = true
