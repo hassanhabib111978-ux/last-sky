@@ -21,6 +21,12 @@ var joystick_knob: ColorRect
 var fire_cooldown := 0.0
 var fire_interval := 0.22
 var crosshair: Label
+var ammo := 12
+var magazine_size := 12
+var reserve_ammo := 60
+var reload_time := 1.25
+var reload_left := 0.0
+var weapon_label: Label
 
 func _ready() -> void:
     _build_world()
@@ -152,6 +158,14 @@ func _build_mobile_controls() -> void:
     crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
     hud.add_child(crosshair)
 
+    weapon_label = Label.new()
+    weapon_label.text = "RIFLE  12 / 60"
+    weapon_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+    weapon_label.position = Vector2(-240, 28)
+    weapon_label.add_theme_font_size_override("font_size", 22)
+    weapon_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    hud.add_child(weapon_label)
+
     var aim_hint := Label.new()
     aim_hint.text = "DRAG TO AIM"
     aim_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -163,8 +177,13 @@ func _build_mobile_controls() -> void:
     joystick_center = Vector2(122, get_viewport().size.y - 90)
 
 func _fire_weapon() -> void:
-    if fire_cooldown > 0.0:
+    if reload_left > 0.0 or fire_cooldown > 0.0:
         return
+    if ammo <= 0:
+        _start_reload()
+        return
+    ammo -= 1
+    _update_weapon_hud()
     fire_cooldown = fire_interval
     if not drone or not is_instance_valid(drone):
         return
