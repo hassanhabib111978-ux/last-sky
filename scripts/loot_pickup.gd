@@ -5,6 +5,8 @@ var loot_type := "AMMO"
 var amount := 8
 var lifetime := 45.0
 var spin_speed := 2.4
+var bob_time := 0.0
+var start_y := 0.0
 
 func setup(type: String, value: int) -> void:
     loot_type = type
@@ -12,8 +14,11 @@ func setup(type: String, value: int) -> void:
 
 func _ready() -> void:
     body_entered.connect(_on_body_entered)
+    start_y = position.y
 
 func _process(delta: float) -> void:
+    bob_time += delta
+    position.y = start_y + sin(bob_time * 3.0) * 0.08
     rotate_y(spin_speed * delta)
     lifetime -= delta
     if lifetime <= 0.0:
