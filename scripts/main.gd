@@ -52,6 +52,8 @@ func _build_world() -> void:
     environment.environment = env
     add_child(environment)
 
+    _build_city_block()
+
     var light := DirectionalLight3D.new()
     light.rotation_degrees = Vector3(-55, -25, 0)
     light.light_energy = 1.2
@@ -66,6 +68,85 @@ func _build_world() -> void:
     material.roughness = 0.92
     ground.material_override = material
     add_child(ground)
+
+func _build_city_block() -> void:
+    var city := Node3D.new()
+    city.name = "AbandonedCity"
+    add_child(city)
+
+    _make_building(city, Vector3(-15, 4, -18), Vector3(12, 8, 10), 2)
+    _make_building(city, Vector3(16, 5, -24), Vector3(14, 10, 12), 3)
+    _make_building(city, Vector3(-20, 3, 8), Vector3(10, 6, 9), 1)
+    _make_building(city, Vector3(18, 4, 12), Vector3(12, 8, 10), 2)
+
+    _make_wall(city, Vector3(-4, 1.5, -12), Vector3(12, 3, 1.2))
+    _make_wall(city, Vector3(8, 1.2, 2), Vector3(1.2, 2.4, 10))
+    _make_wall(city, Vector3(-11, 1.2, 18), Vector3(14, 2.4, 1.2))
+
+    _make_cover(city, Vector3(-2, 0.7, 8), Vector3(4, 1.4, 2))
+    _make_cover(city, Vector3(10, 0.7, -6), Vector3(3, 1.4, 3))
+    _make_cover(city, Vector3(-10, 0.7, -2), Vector3(3, 1.4, 4))
+
+func _make_building(parent: Node3D, pos: Vector3, size: Vector3, floors: int) -> void:
+    var body := StaticBody3D.new()
+    body.position = pos
+    body.name = "Building"
+    parent.add_child(body)
+
+    var mesh := MeshInstance3D.new()
+    var box := BoxMesh.new()
+    box.size = size
+    mesh.mesh = box
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.10 + floors * 0.015, 0.11, 0.12)
+    material.roughness = 0.9
+    mesh.material_override = material
+    body.add_child(mesh)
+
+    var collision := CollisionShape3D.new()
+    var shape := BoxShape3D.new()
+    shape.size = size
+    collision.shape = shape
+    body.add_child(collision)
+
+    for floor_index in range(floors):
+        var window_row := MeshInstance3D.new()
+        var window := BoxMesh.new()
+        window.size = Vector3(size.x * 0.55, 0.22, 0.04)
+        window_row.mesh = window
+        window_row.position = Vector3(0, -size.y * 0.5 + 1.5 + floor_index * 2.3, size.z * 0.5 + 0.03)
+        var glass := StandardMaterial3D.new()
+        glass.albedo_color = Color(0.05, 0.16, 0.20)
+        glass.emission_enabled = true
+        glass.emission = Color(0.02, 0.08, 0.10)
+        glass.emission_energy_multiplier = 0.5
+        window_row.material_override = glass
+        body.add_child(window_row)
+
+func _make_wall(parent: Node3D, pos: Vector3, size: Vector3) -> void:
+    _make_cover(parent, pos, size)
+
+func _make_cover(parent: Node3D, pos: Vector3, size: Vector3) -> void:
+    var body := StaticBody3D.new()
+    body.position = pos
+    body.name = "Cover"
+    parent.add_child(body)
+
+    var mesh := MeshInstance3D.new()
+    var box := BoxMesh.new()
+    box.size = size
+    mesh.mesh = box
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.16, 0.15, 0.14)
+    material.roughness = 0.95
+    mesh.material_override = material
+    body.add_child(mesh)
+
+    var collision := CollisionShape3D.new()
+    var shape := BoxShape3D.new()
+    shape.size = size
+    collision.shape = shape
+    body.add_child(collision)
 
 func _build_player() -> void:
     player = CharacterBody3D.new()
