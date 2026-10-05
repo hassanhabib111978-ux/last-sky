@@ -5,7 +5,8 @@ extends Node3D
 
 var player: CharacterBody3D
 var camera: Camera3D
-var drone: MeshInstance3D
+var drone: CharacterBody3D
+var player_health := 100.0
 var drone_angle := 0.0
 var speed := 5.0
 var touch_move := Vector2.ZERO
@@ -91,28 +92,29 @@ func _build_player() -> void:
     camera.current = true
 
 func _build_drone() -> void:
-    drone = MeshInstance3D.new()
+    drone = CharacterBody3D.new()
     drone.name = "ScoutDrone"
+    drone.position = Vector3(0, 2.5, -8)
+
+    var visual := MeshInstance3D.new()
+    visual.name = "Visual"
     var sphere := SphereMesh.new()
     sphere.radius = 0.45
     sphere.height = 0.9
-    drone.mesh = sphere
-    drone.position = Vector3(0, 2.5, -8)
+    visual.mesh = sphere
     var material := StandardMaterial3D.new()
     material.albedo_color = Color(0.18, 0.2, 0.24)
     material.metallic = 0.8
     material.roughness = 0.28
-    drone.material_override = material
+    visual.material_override = material
+    drone.add_child(visual)
 
-    var drone_body := StaticBody3D.new()
-    drone_body.name = "DroneCollision"
-    var drone_collision := CollisionShape3D.new()
-    var drone_shape := SphereShape3D.new()
-    drone_shape.radius = 0.5
-    drone_collision.shape = drone_shape
-    drone_body.add_child(drone_collision)
-    drone_body.set_meta("damage_target", drone)
-    drone.add_child(drone_body)
+    var collision := CollisionShape3D.new()
+    var shape := SphereShape3D.new()
+    shape.radius = 0.5
+    collision.shape = shape
+    drone.add_child(collision)
+
     add_child(drone)
 
 func _build_hud() -> void:
@@ -185,6 +187,14 @@ func _build_mobile_controls() -> void:
     hud.add_child(aim_hint)
 
     joystick_center = Vector2(122, get_viewport().size.y - 90)
+
+func take_damage(amount: float) -> void:
+    player_health = maxf(player_health - amount, 0.0)
+    var status := get_node("HUD/Status") as Label
+    if status:
+        status.text = "PLAYER HIT  •  HP %d" % int(player_health)
+    if player_health <= 0.0 and player:
+        player.set_physics_process(false)
 
 func _fire_weapon() -> void:
     if reload_left > 0.0 or fire_cooldown > 0.0:
