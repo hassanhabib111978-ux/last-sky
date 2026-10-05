@@ -28,6 +28,7 @@ var reserve_ammo := 60
 var reload_time := 1.25
 var reload_left := 0.0
 var weapon_label: Label
+var loot_count := {"AMMO": 0, "BATTERY": 0, "PARTS": 0}
 
 func _ready() -> void:
     _build_world()
@@ -188,6 +189,43 @@ func _build_mobile_controls() -> void:
     hud.add_child(aim_hint)
 
     joystick_center = Vector2(122, get_viewport().size.y - 90)
+
+func collect_loot(loot_type: String, amount: int) -> void:
+    if loot_type == "AMMO":
+        reserve_ammo += amount
+    elif loot_type == "BATTERY":
+        loot_count["BATTERY"] += amount
+    elif loot_type == "PARTS":
+        loot_count["PARTS"] += amount
+    loot_count["AMMO"] += amount if loot_type == "AMMO" else 0
+    _update_weapon_hud()
+    var status := get_node("HUD/Status") as Label
+    if status:
+        status.text = "LOOT COLLECTED  •  %s +%d" % [loot_type, amount]
+
+func _spawn_loot(at_position: Vector3) -> void:
+    var loot := Area3D.new()
+    loot.name = "LootPickup"
+    loot.set_script(preload("res://scripts/loot_pickup.gd"))
+    loot.position = at_position + Vector3(0, 0.35, 0)
+    var mesh := MeshInstance3D.new()
+    var box := BoxMesh.new()
+    box.size = Vector3(0.42, 0.42, 0.42)
+    mesh.mesh = box
+    var material := StandardMaterial3D.new()
+    material.albedo_color = Color(0.12, 0.65, 0.95)
+    material.emission_enabled = true
+    material.emission = Color(0.04, 0.3, 0.8)
+    material.emission_energy_multiplier = 1.8
+    mesh.material_override = material
+    loot.add_child(mesh)
+    var collision := CollisionShape3D.new()
+    var shape := BoxShape3D.new()
+    shape.size = Vector3(0.55, 0.55, 0.55)
+    collision.shape = shape
+    loot.add_child(collision)
+    add_child(loot)
+    loot.setup("AMMO", 8)
 
 func take_damage(amount: float) -> void:
     player_health = maxf(player_health - amount, 0.0)
