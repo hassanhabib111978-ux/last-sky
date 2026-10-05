@@ -3,6 +3,7 @@ class_name ScoutDrone
 
 signal damaged(amount: float, remaining: float)
 signal destroyed
+signal loot_dropped(position: Vector3)
 
 @export var max_health := 60.0
 @export var move_speed := 2.8
@@ -92,6 +93,7 @@ func _die() -> void:
     dead = true
     velocity = Vector3.ZERO
     destroyed.emit()
+    loot_dropped.emit(global_position)
     var tween := create_tween()
     tween.set_parallel(true)
     tween.tween_property(self, "scale", Vector3(0.05, 0.05, 0.05), 0.22)
