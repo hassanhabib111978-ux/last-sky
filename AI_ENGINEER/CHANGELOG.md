@@ -27,3 +27,5 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Added first Loot system: destroyed Scout Drones emit loot drops, collectible pickups add ammo/resources, and pickups expire automatically.
 
 - 2026-10-05: Expanded first Loot loop to three resource types (AMMO, BATTERY, PARTS), added resource HUD counters, randomized drone drops, and animated pickups.
+
+- 2026-10-05: Created the first procedural Abandoned City combat block with buildings, cover walls, alley-like lanes, collision, and simple emissive window storytelling.
