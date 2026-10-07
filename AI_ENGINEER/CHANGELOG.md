@@ -1,5 +1,24 @@
 # LAST SKY AI ENGINEER — Change Log
 
+## 2026-10-07 — Android delivery + survival systems
+- Added a dedicated LAST SKY launcher icon and linked it as the project icon.
+- Bumped Android test build to version 0.2.0 / build 2.
+- Added player shield system: 50 shield points absorb damage before HP.
+- Battery pickups now restore shield capacity.
+- Added live Shield + HP HUD.
+- Automated Android export completed successfully with Godot 4.7.2.
+- Published the resulting APK to the `android-test` GitHub release.
+- Latest APK asset size: 28,365,895 bytes.
+- APK SHA-256: `4327998246d87aece422ea11724b5980c8195702c6cf1ad3da1c5b6e35b1c4b3`.
+
+### Test status
+Repository structure: PASS
+Godot validation: PASS
+Android export: PASS
+APK artifact: PASS
+GitHub release asset: PASS
+Real-device installation/runtime: NOT YET VERIFIED
+
 ## 2026-10-05 — Foundation initialized
 - Created the LAST SKY repository foundation.
 - Added the AI Engineer constitution.
@@ -33,7 +52,6 @@ Live Godot MCP connection: NOT STARTED
 - 2026-10-05: Reworked city buildings into partially ruined structures with broken upper sections, missing windows, facade debris, and rubble while preserving collision.
 
 - 2026-10-05: Pushed the abandoned city visual language toward contemporary Eastern-European war-torn urban damage: fractured facade slabs, heavier rubble, irregular damage, and dense improvised cover while keeping the setting fictional and non-factional.
-
 
 ## 2026-10-05 — City environment expansion + core movement loop
 - Added low-cost abandoned civilian vehicles, including damaged/scorched variants.
