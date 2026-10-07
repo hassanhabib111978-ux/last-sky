@@ -7,6 +7,9 @@ var player: CharacterBody3D
 var camera: Camera3D
 var drone: CharacterBody3D
 var player_health := 100.0
+var max_player_health := 100.0
+var player_shield := 50.0
+var max_player_shield := 50.0
 var drone_angle := 0.0
 var speed := 5.0
 var touch_move := Vector2.ZERO
@@ -28,6 +31,7 @@ var reserve_ammo := 60
 var reload_time := 1.25
 var reload_left := 0.0
 var weapon_label: Label
+var shield_label: Label
 var loot_count := {"AMMO": 0, "BATTERY": 0, "PARTS": 0}
 var loot_label: Label
 var drone_spawn_points: Array[Vector3] = []
@@ -532,6 +536,13 @@ func _build_hud() -> void:
     status.add_theme_font_size_override("font_size", 16)
     layer.add_child(status)
 
+    shield_label = Label.new()
+    shield_label.text = "SHIELD  50 / 50  •  HP 100 / 100"
+    shield_label.position = Vector2(32, 88)
+    shield_label.add_theme_font_size_override("font_size", 16)
+    shield_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    layer.add_child(shield_label)
+
 func _build_mobile_controls() -> void:
     var hud := get_node("HUD") as CanvasLayer
 
@@ -598,6 +609,8 @@ func collect_loot(loot_type: String, amount: int) -> void:
         reserve_ammo += amount
     elif loot_type == "BATTERY":
         loot_count["BATTERY"] += amount
+        player_shield = minf(player_shield + float(amount * 20), max_player_shield)
+        _update_shield_hud()
     elif loot_type == "PARTS":
         loot_count["PARTS"] += amount
     loot_count["AMMO"] += amount if loot_type == "AMMO" else 0
@@ -635,10 +648,17 @@ func _spawn_loot(at_position: Vector3) -> void:
     loot.setup(loot_type, amount)
 
 func take_damage(amount: float) -> void:
-    player_health = maxf(player_health - amount, 0.0)
+    var remaining_damage := amount
+    if player_shield > 0.0:
+        var absorbed := minf(player_shield, remaining_damage)
+        player_shield -= absorbed
+        remaining_damage -= absorbed
+    if remaining_damage > 0.0:
+        player_health = maxf(player_health - remaining_damage, 0.0)
+    _update_shield_hud()
     var status := get_node("HUD/Status") as Label
     if status:
-        status.text = "PLAYER HIT  •  HP %d" % int(player_health)
+        status.text = "PLAYER HIT  •  SHIELD %d  •  HP %d" % [int(player_shield), int(player_health)]
     if player_health <= 0.0 and player:
         player.set_physics_process(false)
 
@@ -691,6 +711,10 @@ func _start_reload() -> void:
 func _update_weapon_hud() -> void:
     if weapon_label:
         weapon_label.text = "RIFLE  %d / %d" % [ammo, reserve_ammo]
+
+func _update_shield_hud() -> void:
+    if shield_label:
+        shield_label.text = "SHIELD  %d / %d  •  HP %d / %d" % [int(player_shield), int(max_player_shield), int(player_health), int(max_player_health)]
 
 func _update_loot_hud() -> void:
     if loot_label:
