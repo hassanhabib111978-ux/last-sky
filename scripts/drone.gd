@@ -68,7 +68,7 @@ func _physics_process(delta: float) -> void:
     if horizontal_to_player.length() > 0.05:
         look_at(global_position + horizontal_to_player, Vector3.UP)
 
-    if distance <= attack_range and attack_cooldown <= 0.0:
+    if distance <= attack_range and attack_cooldown <= 0.0 and _has_line_of_sight():
         _attack_player()
         attack_cooldown = attack_interval
 
@@ -99,6 +99,19 @@ func _choose_tactical_position() -> Vector3:
     candidate.z = clamp(candidate.z, -32.0, 32.0)
     candidate.y = base_height
     return candidate
+
+func _has_line_of_sight() -> bool:
+    if not is_instance_valid(target):
+        return false
+    var space_state := get_world_3d().direct_space_state
+    var origin := global_position
+    var target_position := target.global_position
+    var query := PhysicsRayQueryParameters3D.create(origin, target_position)
+    query.exclude = [self]
+    var hit := space_state.intersect_ray(query)
+    if hit.is_empty():
+        return true
+    return hit.get("collider") == target
 
 func _attack_player() -> void:
     if target.has_method("take_damage"):
